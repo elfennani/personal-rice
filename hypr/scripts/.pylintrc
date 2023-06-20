@@ -1,0 +1,2 @@
+[MASTER]
+init-hook='import sys; sys.path.append("/usr/lib/python3.11/site-packages/gi/overrides")'

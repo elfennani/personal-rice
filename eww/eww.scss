@@ -1,0 +1,98 @@
+$highlight: #bc0024;
+$textColor: #313131;
+$topBarBackground: #f1f5f9;
+$topBarButtonHover: #cbd5e1;
+$topBarButtonActive: #cbd5e1;
+
+* {
+    font-family: Source Sans;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.clock {
+    background: transparent;
+    padding: 0;
+
+    > * {
+        font-family: Interstate;
+        color: white;
+    }
+
+    .time {
+        font-size: 96px;
+        letter-spacing: -8px;
+    }
+
+    .date {
+        font-size: 32px;
+        margin: 0 16px;
+        opacity: 0.5;
+        font-weight: 100;
+    }
+}
+
+.topbar {
+    color: #020617;
+    background-color: transparent;
+}
+
+.content {
+    background-color: $topBarBackground;
+}
+
+.infobox {
+    color: $textColor;
+    padding: 0 12px;
+    border-radius: 5px;
+}
+
+button {
+    background-color: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0 12px;
+    color: $textColor;
+
+    &:hover {
+        background-color: $topBarButtonHover;
+        border-radius: 0;
+    }
+}
+
+.nopadding {
+    padding: 0;
+}
+
+.workspace {
+    padding: 0;
+
+    button {
+        color: $textColor;
+        padding: 0 12px;
+    }
+}
+
+.active-workspace {
+    background-color: $topBarButtonActive;
+    padding: 50px;
+
+    &:hover {
+        background-color: white;
+    }
+}
+
+.controlpanel {
+    background-color: $topBarBackground;
+    color: #020617;
+    // opacity: 0.8;
+
+    > box {
+        margin: 24px;
+    }
+
+    button {
+        padding: 12px;
+        border-radius: 4px;
+    }
+}

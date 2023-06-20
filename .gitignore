@@ -3,6 +3,10 @@
 !README.md
 !.gitignore
 !/hypr/
+!/hypr/**
 !/eww/
+!/eww/**
 !/mako/
+!/mako/**
 !/foot/
+!/foot/**

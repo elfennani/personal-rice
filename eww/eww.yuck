@@ -1,0 +1,235 @@
+(include "./controlpanel.yuck")
+
+
+
+(defpoll M_TITLE
+  :interval "1s"
+  `playerctl metadata title`
+)
+
+(defpoll M_ARTIST
+  :interval "1s"
+  `playerctl metadata artist`
+)
+
+(defpoll PLAYING_BUTTON
+  :interval "1s"
+  `if [[ "$(playerctl status)" == "Playing" ]]; then echo Pause;else echo Play; fi;`
+)
+
+(defpoll CURRENT_WORKSPACE
+  :interval "250ms"
+  `hyprctl activeworkspace | grep "workspace ID" -m 1 | cut -d "(" -f 2 | cut -d ")" -f 1`
+)
+
+(defpoll IS_PANEL_OPEN
+  :interval "250ms"
+  `eww windows | grep "backdrop" | cut -d "*" -f 1`
+)
+
+
+(defpoll AUDIO_IS_MUTE
+  :interval "5s"
+  `amixer get Master | grep "Front Left:" | cut -d "[" -f 3 | cut -d "]" -f 1`
+)
+
+(deflisten AUDIO
+  `./scripts/audio_volume.sh`
+)
+
+(defpoll WIFI_NAME
+  :interval "3s"
+  `nmcli d show wlan0 | grep "GENERAL.CONNECTION" | xargs | cut -d " " -f 2`
+)
+
+(defpoll Connection
+  :interval "3s"
+  `nmcli -t -f NAME,TYPE connection show --active | grep -v "lo:loopback" | jq -Rs 'split("\\n") | map(select(length > 0)) | map(split(":")) | map({"name": .[0], "type": .[1]}) | .[0]'`
+)
+
+(deflisten BRIGHTNESS
+  `./scripts/bnmon.sh`
+  ; `brightnessctl -d intel_backlight | grep "Current" | cut -d "(" -f 2 | cut -d ")" -f 1`
+)
+
+(defpoll CURRENT_TIME
+  :interval "5s"
+  `date "+%b %d, %R"`
+)
+
+(defpoll CLOCK_TIME
+  :interval "5s"
+  `date "+%R"`
+)
+
+(defpoll CLOCK_DATE
+  :interval "5s"
+  `date "+%A, %b %d"`
+)
+
+(defwindow topbar
+  :monitor 0
+  :geometry (geometry
+    :x "0%"
+    :y "0px"
+    :width "100%"
+    :height "32px"
+    :anchor "top center"
+  )
+  :stacking "fg"
+  :exclusive true
+  :reserve (struts :side "top" :distance "4%")
+  :windowtype "dock"
+  :wm-ignore false
+  
+  (eventbox
+    (centerbox
+      :class "content"
+      (box
+        :space-evenly false
+        :spacing 8
+        
+        (infobox
+          :class "workspace"
+          (eventbox :cursor "pointer" (button :onclick "hyprctl dispatch workspace 1" :class {CURRENT_WORKSPACE == "1" ? "active-workspace" : ""} "1" ))
+          (eventbox :cursor "pointer" (button :onclick "hyprctl dispatch workspace 2" :class {CURRENT_WORKSPACE == "2" ? "active-workspace" : ""} "2" ))
+          (eventbox :cursor "pointer" (button :onclick "hyprctl dispatch workspace 3" :class {CURRENT_WORKSPACE == "3" ? "active-workspace" : ""} "3" ))
+          (eventbox :cursor "pointer" (button :onclick "hyprctl dispatch workspace 4" :class {CURRENT_WORKSPACE == "4" ? "active-workspace" : ""} "4" ))
+          (eventbox :cursor "pointer" (button :onclick "hyprctl dispatch workspace 5" :class {CURRENT_WORKSPACE == "5" ? "active-workspace" : ""} "5" ))
+          (eventbox :cursor "pointer" (button :onclick "hyprctl dispatch workspace 6" :class {CURRENT_WORKSPACE == "6" ? "active-workspace" : ""} "6" ))
+        )
+        (infobox
+          :class "nopadding"
+          (button
+            :onclick "pypr toggle term"
+            (image
+              :path "images/terminal.svg"
+              :image-width 18
+            )
+          )
+        )
+      )
+      (box
+        :spacing {M_ARTIST != "" ? 4 : 0}
+        :space-evenly false
+        (infobox
+          :visible {M_ARTIST != ""}
+          :class "nopadding"
+          (button
+            :onclick "playerctl play-pause"
+            :onmiddleclick "playerctl previous"
+            :onrightclick "playerctl next"
+            (box
+              :space-evenly false
+              :spacing 4
+              (label :limit-width 50 :text M_TITLE)
+              "-"
+              (label :limit-width 50 :text M_ARTIST)
+            )
+          )
+          (label :text "•")
+        )
+        (infobox
+          (label :text CURRENT_TIME)
+        )
+      )
+      (box
+        :space-evenly false
+        :halign "end"
+        :spacing 0
+        
+        (infobox
+          :onclick "amixer set Master toggle && eww update AUDIO_IS_MUTE=\`amixer get Master | grep \"Front Left:\" | cut -d \"[\" -f 3 | cut -d \"]\" -f 1\`"
+          :onscroll "[[ \"{}\" == \"up\" ]] && amixer set Master 1%+ || amixer set Master 1%-"
+          :spacing 8
+          (image
+            :style "opacity: ${AUDIO_IS_MUTE == 'off' ? 0.5 : 1}"
+            :path "images/audio.svg"
+            :image-width 18
+          )
+          (label :style {AUDIO_IS_MUTE == "off" ? "text-decoration: line-through;" : ""} :text "${AUDIO}%")
+        )
+        (infobox
+          :class "nopadding"
+          (button
+            :onclick "foot nmtui &"
+            (box
+              :space-evenly false
+              :spacing 8
+              (image
+                :path {Connection == "null" ? "images/wifi.svg" : Connection.type == "802-3-ethernet" ? "images/ethernet.svg" : "images/wifi.svg"}
+                :image-width 18
+              )
+              (label :text { Connection == "null" ? "Not Connected" : Connection.name })
+            ))
+        )
+        (infobox
+          :spacing 8
+          :class "nopadding"
+          (button
+            :onclick "pypr toggle blueman"
+            (image
+              :path "images/bluetooth.svg"
+              :image-width 18
+            )
+          )
+        )
+        (infobox
+          :spacing 8
+          :onscroll "[[ \"{}\" == \"up\" ]] && brightnessctl set +2% || brightnessctl set 2%-"
+          (image
+            :path "images/brightness.svg"
+            :image-width 18
+          )
+          "${BRIGHTNESS}%"
+        )
+        (infobox
+          :spacing 8
+          ; :onclick {IS_PANEL_OPEN == "backdrop" ? "eww open backdrop && eww open control-panel" : "eww close control-panel && eww close backdrop"}
+          (image
+            :path "images/power.svg"
+            :image-width 18
+          )
+          "${EWW_BATTERY.BAT0.capacity}%"
+        )
+      )
+    )))
+
+(defwidget infobox [?class ?visible ?spacing ?style ?onclick ?onscroll]
+  (eventbox
+    :onclick onclick
+    :onscroll onscroll
+    (box
+      :class "infobox ${class}"
+      :visible visible
+      :space-evenly false
+      :spacing spacing
+      :style style
+      (children)
+    ))
+)
+
+(defwindow clock
+  :monitor 0
+  :geometry (geometry
+    :x "340px"
+    :y "200px"
+    :width "200px"
+    :height "32px"
+    :anchor "top left"
+  )
+  :stacking "bg"
+  :exclusive true
+  ; :reserve (struts :side "top" :distance "4%")
+  :windowtype "dock"
+  :wm-ignore true
+  (box
+    :class "clock"
+    :spacing 0
+    :space-evenly false
+    :orientation "v"
+    
+    (label :class "time" :text "${CLOCK_TIME}" :halign "start")
+    (label :class "date" :text "${CLOCK_DATE}" :halign "start")
+  )
+)

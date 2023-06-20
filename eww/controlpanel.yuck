@@ -1,0 +1,60 @@
+(defwindow controlpanel
+  :monitor 0
+  :geometry (geometry
+    :x "0%"
+    :y "0px"
+    :width "400px"
+    :height "100%"
+    :anchor "top right"
+  )
+  :stacking "fg"
+  :exclusive true
+  :reserve (struts :side "top" :distance "4%")
+  :windowtype "dock"
+  :wm-ignore false
+  
+  (box
+    :orientation "v"
+    :space-evenly false
+    :valign "start"
+    (box
+      :space-evenly false
+      :spacing 8
+      (button
+        :onclick "amixer set Master toggle && eww update AUDIO_IS_MUTE=\`amixer get Master | grep \"Front Left:\" | cut -d \"[\" -f 3 | cut -d \"]\" -f 1\`"
+        (image
+          :style "opacity: ${AUDIO_IS_MUTE == 'off' ? 0.5 : 1}"
+          :path "images/audio.svg"
+          :image-width 18
+        )
+      )
+      (scale
+        :hexpand true
+        :min 0
+        :max 100
+        :value AUDIO
+        :onchange "amixer set Master {}%"
+      )
+    )
+    (eventbox
+      :onscroll "[[ \"{}\" == \"up\" ]] && brightnessctl set +2% || brightnessctl set 2%-"
+      (box
+        :valign "start"
+        :space-evenly false
+        :spacing 8
+        (button
+          :onclick "brightnessctl set 1%"
+          (image
+            :path "images/brightness.svg"
+            :image-width 18
+          )
+        )
+        (scale
+          :hexpand true
+          :min 0
+          :max 100
+          :value AUDIO
+          :onchange "amixer set Master {}%"
+        )
+      )))
+)

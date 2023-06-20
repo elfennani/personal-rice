@@ -1,0 +1,16 @@
+{
+    "pyprland": {
+        "plugins": ["scratchpads"]
+    },
+    "scratchpads": {
+        "term": {
+            "command": "foot -T \"foot-floating\"",
+            "animation": "fromTop"
+        },
+        "blueman": {
+            "command": "blueman-manager",
+            "animation": "fromRight",
+            "unfocus": "hide"
+        }
+    }
+}
